@@ -1,145 +1,105 @@
 # Decidim::Apiauth
 
-[![Build Status](https://github.com/mainio/decidim-module-apiauth/actions/workflows/ci_apiauth.yml/badge.svg)](https://github.com/mainio/decidim-module-apiauth/actions)
-[![codecov](https://codecov.io/gh/mainio/decidim-module-apiauth/branch/master/graph/badge.svg)](https://codecov.io/gh/mainio/decidim-module-apiauth)
+**Provided by:** Mainio
 
-A [Decidim](https://github.com/decidim/decidim) module to add JWT token based
-API authentication possibility to Decidim.
+***
 
-The API authentication module provides a new endpoint for API authentication and
-a method to check for an active authentication token header for each request.
+## Description
 
-Based on [Devise::JWT](https://github.com/waiting-for-dev/devise-jwt).
+This module adds JWT (JSON Web Token) based authentication to the Decidim API. It provides a new endpoint for API authentication and a method to verify the token header for each subsequent request, enabling secure communication for external applications.
 
-The development has been sponsored by the
-[City of Helsinki](https://www.hel.fi/).
+The module is based on `Devise::JWT`, and its development was sponsored by the **City of Helsinki**.
 
-## Installation
+***
 
-Add this line to your application's Gemfile:
+## Installation Prerequisites
 
-```ruby
-gem "decidim-apiauth"
-```
+Before installing this module, ensure you have a working **Decidim application** with its standard dependencies, including **Ruby** and a configured database.
 
-And then execute:
+***
 
-```bash
-$ bundle
-$ bundle exec rails decidim_apiauth:install:migrations
-$ bundle exec rails db:migrate
-```
+## Installation Instructions
 
-Then, configure a secret key by adding the following to your application's
-`config/secrets.yml`:
+Follow these steps to deploy and configure the module:
 
-```yaml
-development:
-  <<: *default
-  # ...
-  secret_key_jwt: generate_a_key_here
+1.  **Add the gem to your Gemfile**. Open your application's `Gemfile` and add the following line:
+    ```ruby
+    gem "decidim-apiauth"
+    ```
 
-test:
-  <<: *default
-  # ...
-  secret_key_jwt: generate_a_key_here
+2.  **Install the gem and run migrations**. Execute the following commands in your terminal:
+    ```bash
+    bundle
+    bundle exec rails decidim_apiauth:install:migrations
+    bundle exec rails db:migrate
+    ```
 
-# Do not keep production secrets in the repository,
-# instead read values from the environment.
-production:
-  <<: *default
-  # ...
-  secret_key_jwt: <%= ENV["SECRET_KEY_JWT"] %>
-```
+3.  **Generate and configure a secret key**. First, generate a unique secret key by running:
+    ```bash
+    bundle exec rails secret
+    ```
+    This will output a long string of characters.
 
-You can generate the key from the console by running:
+4.  **Add the secret key to `secrets.yml`**. Copy the generated key and add it to your `config/secrets.yml` file. For production environments, it is strongly recommended to load the key from an environment variable.
+    ```yaml
+    # In config/secrets.yml
 
-```bash
-$ bundle exec rails secret
-abcdef123456... <-- (This printed line is the secret)
-```
+    development:
+      <<: *default
+      secret_key_jwt: 'paste_your_generated_key_for_development_here'
 
-## Usage
+    test:
+      <<: *default
+      secret_key_jwt: 'paste_your_generated_key_for_testing_here'
 
-1. Login
-```
-curl --location --request POST 'http://localhost:3000/api/sign_in' \
---form 'user[email]="admin@example.org"' \
---form 'user[password]="decidim123456"'
-```
-2. Save [jwt](https://jwt.io/introduction) web token from response
-3. Include token to further requests
-```
-curl --location --request POST 'http://localhost:3000/api' \
---header 'Authorization: Bearer replace_this_with_token' \
---header 'Content-Type: application/json' \
---data-raw '{"query":"{\n  session {\nuser {\n id\n nickname\n}\n}\n}","variables":{}}'
-```
+    # For production, use an environment variable
+    production:
+      <<: *default
+      secret_key_jwt: <%= ENV["SECRET_KEY_JWT"] %>
+    ```
+    Ensure the `SECRET_KEY_JWT` environment variable is set in your production environment.
 
-### Troubleshoot
+***
 
-In case you run into problems like getting: `` {"data":{"session":null}} ``
+## License
 
-1. Make sure you aren't logged already
-2. In production / staing check that request URL has https protocol (not http)!
-3. Make sure that request has ```Content-Type: application/json``` and ```Content-Length```
-4. If you are using [Postman](https://www.postman.com/), create clean new request
-5. Make sure that secrets (secrets.yml) are entered correctly:
-``
-secret_key_jwt: <%= ENV["SECRET_KEY_JWT"] %>
-``
-and that ``SECRET_KEY_JWT`` environment variable has been set.
+This project is licensed under the **GNU AFFERO GENERAL PUBLIC LICENSE v3.0**. See the [LICENSE-AGPLv3.txt](https://github.com/mainio/decidim-module-apiauth/blob/master/LICENSE-AGPLv3.txt) file for details.
 
-## Configuration
+***
 
-By default, API authentication is necessary if the Decidim organization is set
-to force authentication.
+## External technical resources
 
-If you want to make API authentication necessary for public instances, you can
-use the following configuration option:
+-   **[Source Code Repository](https://github.com/mainio/decidim-module-apiauth)**: The official GitHub repository for this module.
+-   **[Devise::JWT Library](https://github.com/waiting-for-dev/devise-jwt)**: The underlying library used for JWT authentication.
+-   **[Decidim Project](https://github.com/decidim/decidim)**: The main repository for the Decidim framework.
+-   **API Endpoint**: The module exposes a `/api/sign_in` endpoint for token authentication.
 
+***
+
+## User Guide References
+
+### API Usage
+
+1.  **Log in to get a token**. Make a `POST` request to the `/api/sign_in` endpoint with user credentials:
+    ```bash
+    curl --location --request POST '[https://your-decidim-url.com/api/sign_in](https://your-decidim-url.com/api/sign_in)' \
+    --form 'user[email]="your_email@example.org"' \
+    --form 'user[password]="your_password"'
+    ```
+
+2.  **Use the token for authenticated requests**. The response will contain a JWT. Include this token in the `Authorization` header as a Bearer token for all subsequent API calls.
+    ```bash
+    curl --location --request POST '[https://your-decidim-url.com/api](https://your-decidim-url.com/api)' \
+    --header 'Authorization: Bearer <paste_your_jwt_token_here>' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{"query":"{\n  session {\n    user {\n      id\n      nickname\n    }\n  }\n}","variables":{}}'
+    ```
+
+### Advanced Configuration
+
+To force API authentication even on public Decidim instances, add the following initializer in `config/initializers/decidim.rb`:
 ```ruby
 # config/initializers/decidim.rb
 Decidim::Apiauth.configure do |config|
   config.force_api_authentication = true
 end
-```
-
-## Contributing
-
-See [Decidim](https://github.com/decidim/decidim).
-
-### Testing
-
-To run the tests run the following in the gem development path:
-
-```bash
-$ bundle
-$ DATABASE_USERNAME=<username> DATABASE_PASSWORD=<password> bundle exec rake test_app
-$ DATABASE_USERNAME=<username> DATABASE_PASSWORD=<password> bundle exec rspec
-```
-
-Note that the database user has to have rights to create and drop a database in
-order to create the dummy test app database.
-
-In case you are using [rbenv](https://github.com/rbenv/rbenv) and have the
-[rbenv-vars](https://github.com/rbenv/rbenv-vars) plugin installed for it, you
-can add these environment variables to the root directory of the project in a
-file named `.rbenv-vars`. In this case, you can omit defining these in the
-commands shown above.
-
-### Test code coverage
-
-If you want to generate the code coverage report for the tests, you can use
-the `SIMPLECOV=1` environment variable in the rspec command as follows:
-
-```bash
-$ SIMPLECOV=1 bundle exec rspec
-```
-
-This will generate a folder named `coverage` in the project root which contains
-the code coverage report.
-
-## License
-
-See [LICENSE-AGPLv3.txt](LICENSE-AGPLv3.txt).
